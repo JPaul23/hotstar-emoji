@@ -1,0 +1,24 @@
+# API Readme
+
+This API is built using Gin framework and provides endpoints for interacting with emojis on Hotstar.
+
+### Endpoints
+
+- `GET /api/v1/hotstar/emoji`: Get all emojis.
+- `POST /api/v1/hotstar/emoji/react`: React to an emoji.
+
+### Environment Variables
+
+Make sure to set the following environment variable:
+- `API_PORT`: Port on which the API will run.
+
+### Running the API
+
+1. Clone the repository.
+2. Set the required environment variables.
+3. Run the main file `main.go`.
+
+### Dependencies
+
+- Gin: Web framework for Golang.
+- Zap: Logging library for Golang.

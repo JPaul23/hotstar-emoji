@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,29 +30,30 @@ type Emoji struct {
 }
 
 var collection, _ = database.InitDb()
-var messageChannel = make(chan []byte, 1000) // Buffer size 1000
 
-func HandleKafkaProducerBg() {
-	// Producer goroutine to flush data periodically to Kafka
-	go func() {
-		for {
-			select {
-			case message := <-messageChannel:
-				messageStr := string(message)
-				log.Println("Kafka message ====> :", messageStr)
-				// TODOSend message to Kafka
-				// err := kafka.KafkaMessageProducer(producer, []byte("emoji-reaction"), message)
-				// if err != nil {
-				// 	log.Println("Error sending message to Kafka:", err)
-				// }
-				// TODO: handle the flushing
-				// case <-time.After(500 * time.Millisecond):
-				//     // Flush data to Kafka every 500ms
-				//     // Implement the logic to flush data to Kafka
-			}
-		}
-	}()
-}
+// var messageChannel = make(chan []byte, 1000) // Buffer size 1000
+
+// func HandleKafkaProducerBg() {
+// 	// Producer goroutine to flush data periodically to Kafka
+// 	go func() {
+// 		for {
+// 			select {
+// 			case message := <-messageChannel:
+// 				messageStr := string(message)
+// 				log.Println("Kafka message ====> :", messageStr)
+// 				// TODOSend message to Kafka
+// 				err := kafka.KafkaMessageProducer(producer, []byte("emoji-reaction"), message)
+// 				if err != nil {
+// 					log.Println("Error sending message to Kafka:", err)
+// 				}
+// 				// TODO: handle the flushing
+// 				case <-time.After(500 * time.Millisecond):
+// 				    // Flush data to Kafka every 500ms
+// 				    // Implement the logic to flush data to Kafka
+// 			}
+// 		}
+// 	}()
+// }
 
 func GetEmojis(c *gin.Context) {
 	emojis := []Emoji{} // Assuming Emoji is the struct representing your emojis
@@ -98,7 +100,7 @@ func GetEmojis(c *gin.Context) {
 	})
 }
 
-func EmojiReaction(c *gin.Context) {
+func EmojiReaction(c *gin.Context, messageChannel chan kafka.Message) {
 	// var workerLimit = 10
 	// Declare a channel to control concurrency
 
@@ -150,28 +152,17 @@ func EmojiReaction(c *gin.Context) {
 	if err != nil {
 		log.Println("Error marshalling data to JSON:", err)
 	}
+
+	// Create a Kafka message
+	message := kafka.Message{
+		Key:   []byte("emoji-reaction"),
+		Value: emojiJSON,
+	}
+
 	// Add message to the channel for production
-	produceMessage(emojiJSON)
-
-	// Limit concurrency using the channel
-	// concurrency := make(chan struct{}, 10) // Limit to 10 concurrent producers
-
-	// // Limit concurrency using the channel
-	// go func(emojiJSON []byte) {
-	// 	concurrency <- struct{}{} // Acquire a slot
-	// 	defer func() { <-concurrency }()
-	// 	err := kafka.KafkaMessageProducer(producer, []byte("emoji-reaction"), emojiJSON)
-	// 	if err != nil {
-	// 		log.Println("Error sending message to Kafka:", err)
-	// 	}
-	// }(emojiJSON)
+	messageChannel <- message
 
 	c.JSON(200, gin.H{
 		"Message": "Reaction successfully logged",
 	})
-}
-
-// Function to add messages to the channel for production
-func produceMessage(message []byte) {
-	messageChannel <- message
 }
