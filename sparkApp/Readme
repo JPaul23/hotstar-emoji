@@ -1,0 +1,70 @@
+# Spark Application Readme
+
+## Overview
+This Spark application is designed to consumer data from a Kafka stream, and compute aggregates of the data over an interval, and write the results back to another Kafka topic. The application is configured using environment variables and leverages PySpark for stream processing.
+
+## Prerequisites
+- Python 3.x
+- Apache Spark
+- Hadoop (for winutils)
+- Kafka
+- dotenv
+
+## Environment Variables
+The application uses the following environment variables, which should be defined in a `.env` file:
+- `APP_NAME`: The name of the Spark application.
+- `APP_MODE`: The mode in which the Spark application runs (e.g., `local[*]`).
+- `KAFKA_BOOTSTRAP_SERVERS`: The Kafka bootstrap servers.
+- `EMOJI_INPUT_TOPIC`: The Kafka topic to read input data from.
+- `EMOJI_OUTPUT_TOPIC`: The Kafka topic to write output data to.
+
+## Setup
+1. Install the required Python packages:
+    ```sh
+    pip install pyspark python-dotenv
+    ```
+
+2. Set up the environment variables in a `.env` file:
+    ```env
+    APP_NAME=YourAppName
+    APP_MODE=local[*]
+    KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+    EMOJI_INPUT_TOPIC=input_topic
+    EMOJI_OUTPUT_TOPIC=output_topic
+    ```
+
+3. Ensure Hadoop is installed and `winutils` is available if running on Windows.
+
+## Running the Application
+1. Navigate to the directory containing the `batchSparkScript.py` file.
+2. Run the script:
+    ```sh
+    python batchSparkScript.py
+    ```
+
+## Application Workflow
+1. **Initialize Spark Session**: The application initializes a Spark session with the provided application name and mode.
+2. **Read from Kafka Stream**: The application reads data from the specified Kafka input topic.
+3. **Process Data**: (Commented out in the script) The application can add a processing time column, apply watermarking, and compute aggregates over a 2-second window.
+4. **Write to Kafka**: (Commented out in the script) The processed data can be written back to another Kafka topic.
+5. **Print Batch Data**: The application prints the batch data for each micro-batch.
+
+## Logging
+The application uses Python's `logging` module to log information. Logs include the start of the Spark session and batch processing details.
+
+## Notes
+- The script contains commented-out sections for additional processing and writing back to Kafka. Uncomment and modify these sections as needed.
+- Ensure Kafka is running and the specified topics are created before running the application.
+
+## Troubleshooting
+- If you encounter issues with Hadoop on Windows, ensure that the `HADOOP_HOME` environment variable is set correctly and `winutils` is available in the `bin` directory.
+- Verify that the Kafka bootstrap servers and topics are correctly configured and accessible.
+
+## License
+This project is licensed under the MIT License.
+
+## Acknowledgments
+- Apache Spark
+- Apache Kafka
+- Python dotenv
+- Hadoop winutils
