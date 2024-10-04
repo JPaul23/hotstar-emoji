@@ -3,7 +3,7 @@ import sys
 import logging
 import uuid
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import window, count, current_timestamp, expr, col, from_json
+from pyspark.sql.functions import window, count, current_timestamp, col, from_json, collect_list, struct, to_json
 from pyspark.sql.types import *
 from pyspark.sql.types import StructType, StructField, StringType
 from dotenv import load_dotenv
@@ -50,6 +50,7 @@ spark = SparkSession.builder \
     .appName(app_name) \
     .config("spark.jars.packages",",".join(packages)) \
     .config("spark.sql.streaming.stateStore.stateSchemaCheck", "false") \
+    .config("spark.sql.streaming.statefulOperator.checkCorrectness.enabled", "false") \
     .config("spark.sql.shuffle.partitions", "6") \
     .getOrCreate()
 
@@ -99,20 +100,23 @@ transformed_data.printSchema()
 resultDF = transformed_data.withWatermark("timestamp", PROCEESSING_TIME) \
     .groupBy(window(col("timestamp"), PROCEESSING_TIME), "Emoji", "Code") \
     .agg(count("id").alias("count_of_id"))
-resultDF.printSchema()
+# resultDF.printSchema()
+
+# Collect all aggregated results into a single JSON array per window
+aggregatedDF = resultDF.groupBy("window") \
+    .agg(collect_list(struct("count_of_id", "Emoji", "Code")).alias("aggregated_data")) \
+    .selectExpr("to_json(struct(window.start as window_start, window.end as window_end, aggregated_data)) as value")
 
 # Write the results back to another Kafka topic
-# kafka_stream = resultDF.selectExpr("to_json(struct(count_of_id, Emoji, window.start, window.end, Code)) AS value") \
-#     .writeStream \
+# kafka_stream = aggregatedDF.writeStream \
 #     .outputMode("update") \
 #     .option("truncate", False) \
 #     .format("console") \
 #     .option("checkpointLocation", "CHECKPOINT_LOCATION") \
-#     .trigger(processingTime=PROCEESSING_TIME) \
 #     .start()
 
 # Write the data to Kafka
-kafka_stream = resultDF.selectExpr("to_json(struct(count_of_id, Emoji, window.start, window.end, Code)) AS value") \
+kafka_stream = aggregatedDF \
     .writeStream.format("kafka") \
     .option("kafka.bootstrap.servers", kafka_boostrap_server) \
     .option("topic", emoji_output_topic) \
