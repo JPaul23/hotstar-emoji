@@ -17,6 +17,7 @@ load_dotenv()
 # app conf
 app_name = os.getenv('APP_NAME')
 app_mode = os.getenv('APP_MODE')
+PROCEESSING_TIME = os.getenv('PROCEESSING_TIME')
 
 # Kafka configurations
 kafka_boostrap_server = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
@@ -78,6 +79,7 @@ try:
         .option("kafka.bootstrap.servers", kafka_boostrap_server) \
         .option("subscribe", emoji_input_topic) \
         .option("startingOffsets", "latest") \
+        .option("failOnDataLoss", "false") \
         .load()
     logging.info("===> Initial dataframe created successfully")
 except Exception as e:
@@ -93,42 +95,34 @@ transformed_data.printSchema()
 
 # Add watermark and compute aggregates over a 2-second window
 
-# TODO: perform aggregation on Code
-# resultDF = transformed_data.select("id", "Emoji", "Description", "Keywords", "Code", "timestamp") \
-#     .groupBy("id", "Emoji", "Description", "Code") \
-#     .count()
-resultDF = transformed_data.withWatermark("timestamp", "10 seconds") \
-    .select("id", "Emoji", "Description", "Keywords", "Code", "timestamp") \
-    .groupBy(window(col("timestamp"), "10 seconds"), "id", "Emoji", "Code") \
-    .agg(count("id").alias("count"))
+# Perform aggregation on ID
+resultDF = transformed_data.withWatermark("timestamp", PROCEESSING_TIME) \
+    .groupBy(window(col("timestamp"), PROCEESSING_TIME), "Emoji", "Code") \
+    .agg(count("id").alias("count_of_id"))
 resultDF.printSchema()
-# aggregates = df.withWatermark("timestamp", "2 seconds") \
-#                .groupBy(window(df.processing_time, "2 seconds"), "timestamp") \
-#                .count()
-
 
 # Write the results back to another Kafka topic
-kafka_stream = resultDF \
-    .writeStream \
-    .outputMode("update") \
-    .option("truncate", False) \
-    .format("console") \
-    .option("checkpointLocation", "CHECKPOINT_LOCATION") \
-    .start()
+# kafka_stream = resultDF.selectExpr("to_json(struct(count_of_id, Emoji, window.start, window.end, Code)) AS value") \
+#     .writeStream \
+#     .outputMode("update") \
+#     .option("truncate", False) \
+#     .format("console") \
+#     .option("checkpointLocation", "CHECKPOINT_LOCATION") \
+#     .trigger(processingTime=PROCEESSING_TIME) \
+#     .start()
 
 # Write the data to Kafka
-# kafka_stream = resultDF.selectExpr("to_json(struct(*)) AS value") \
-#     .writeStream \
-#     .format("kafka") \
-#     .option("kafka.bootstrap.servers", kafka_boostrap_server) \
-#     .option("topic", emoji_output_topic) \
-#     .option("checkpointLocation", CHECKPOINT_LOCATION) \
-#     .start()
+kafka_stream = resultDF.selectExpr("to_json(struct(count_of_id, Emoji, window.start, window.end, Code)) AS value") \
+    .writeStream.format("kafka") \
+    .option("kafka.bootstrap.servers", kafka_boostrap_server) \
+    .option("topic", emoji_output_topic) \
+    .option("checkpointLocation", CHECKPOINT_LOCATION) \
+    .trigger(processingTime=PROCEESSING_TIME) \
+    .start()
 
 # Simplified write stream to console for validation
 
-
-logger.info("----> Results written to Kafka")
+logger.info("----> Results to be written to Kafka")
 
 kafka_stream.awaitTermination()
 
