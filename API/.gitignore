@@ -19,3 +19,6 @@ tmp/
 
 # Go workspace file
 go.work
+
+# Other files
+Dockerfile.txt

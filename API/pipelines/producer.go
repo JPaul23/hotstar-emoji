@@ -3,6 +3,7 @@ package pipelines
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,7 +14,7 @@ import (
 func KafkaProducerSetup() *kafka.Writer {
 	err := godotenv.Load()
 	if err != nil {
-		panic("====> Error in loading api .env file")
+		log.Fatal("Error loading .env file writer KafkaProducerSetup ====> ", err)
 	}
 	kafkaHost := os.Getenv("KAKFA_HOST")
 	kafkaPort := os.Getenv("KAFKA_PORT")

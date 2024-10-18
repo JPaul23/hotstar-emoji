@@ -59,7 +59,7 @@ func GetEmojis(c *gin.Context) {
 	emojis := []Emoji{} // Assuming Emoji is the struct representing your emojis
 	err := godotenv.Load()
 	if err != nil {
-		panic("Error loading .env file")
+		log.Fatal("Error loading .env file GetEmojis func ====> ", err)
 	}
 	limit := c.Query("limit")
 	fmt.Println(limit)
