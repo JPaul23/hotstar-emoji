@@ -40,7 +40,7 @@ func logRequestMiddleware() gin.HandlerFunc {
 func KafkaProducerSetup() *kafka.Writer {
 	err := godotenv.Load()
 	if err != nil {
-		panic("====> Error in loading api .env file")
+		log.Println("Error loading .env file KafkaProducerSetup ====> ", err)
 	}
 	kafkaHost := os.Getenv("KAKFA_HOST")
 	kafkaPort := os.Getenv("KAFKA_PORT")
@@ -60,15 +60,15 @@ func handleKafkaProducer(messageChannel chan kafka.Message) {
 	go func() {
 		err := godotenv.Load()
 		if err != nil {
-			panic("====> Error in loading api .env file")
+			log.Println("Error loading .env file handleKafkaProducer ====> ", err)
 		}
 		kafkaFlushTime := os.Getenv("KAFKA_FLUSH_TIME")
 		if kafkaFlushTime == "" {
-			log.Fatal("Kafka flush time is not available")
+			log.Println("Kafka flush time is not available")
 		}
 		flushTime, err := strconv.Atoi(kafkaFlushTime)
 		if err != nil {
-			log.Fatal("Error converting Kafka flush time to integer")
+			log.Println("Error converting Kafka flush time to integer")
 		}
 		for {
 			select {

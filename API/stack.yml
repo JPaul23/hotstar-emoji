@@ -1,0 +1,50 @@
+name: hotstar-emoji-api
+
+services:
+  api:
+    image: hotstar-emoji-api:1.0
+    container_name: hotstar-emoji-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - API_PORT=${API_PORT}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+        - MONGO_URI=${MONGO_URI}
+        - DATABASE=${DATABASE}
+        - COLLECTION=${COLLECTION}
+        - KAKFA_HOST=${KAKFA_HOST}
+        - KAFKA_PORT=${KAFKA_PORT}
+        - KAFKA_TOPIC=${KAFKA_TOPIC}
+        - KAFKA_FLUSH_TIME=${KAFKA_FLUSH_TIME}
+    depends_on: 
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    ports:
+      - 27017:27017
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - mongodb_net
+volumes:
+  mongodb-data:
+    driver: local
+    name: mongo-data
+  mongodb-config:
+    driver: local
+    name: mongo-config
+
+networks:
+  mongodb_net:
+    driver: bridge
+    name: mongo_net
