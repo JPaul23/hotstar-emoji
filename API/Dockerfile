@@ -12,7 +12,7 @@ RUN adduser \
 
 WORKDIR $GOPATH/src/hotstar-emoji-api/app/
 
-COPY .env ./
+COPY .env.prod ./
 
 COPY . .
 

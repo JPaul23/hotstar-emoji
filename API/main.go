@@ -79,7 +79,6 @@ func handleKafkaProducer(messageChannel chan kafka.Message) {
 				}
 			case <-time.After(time.Duration(flushTime) * time.Millisecond):
 				// Flush data to Kafka every 500ms
-				// kafka-go handles this internally based on the configuration
 				log.Println("Flushing data =====:")
 			}
 		}
