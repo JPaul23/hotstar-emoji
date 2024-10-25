@@ -14,6 +14,8 @@ services:
       - mongodb
     ports:
       - "${API_PORT}:${API_PORT}"
+    networks:
+      - hotstar-network
 
   mongodb:
     image: mongo:latest
@@ -28,7 +30,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
     networks:
-      - mongodb_net
+      - hotstar-network
 volumes:
   mongodb-data:
     driver: local
@@ -38,6 +40,6 @@ volumes:
     name: mongo-config
 
 networks:
-  mongodb_net:
+  hotstar-network:
     driver: bridge
-    name: mongo_net
+    name: hotstar_net

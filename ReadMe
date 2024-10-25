@@ -1,0 +1,35 @@
+# ReadMe
+
+## System Overview
+
+This system is designed to handle emoji reactions using a Kafka-based architecture, complemented by a PySpark application and a PubSub application written in Python. It allows for the production and consumption of emoji-related messages, enabling real-time processing and interaction. The system is composed of an API that interfaces with a MongoDB database, a Kafka messaging system for handling events, and additional applications for data processing and message handling.
+
+## Tools Used
+
+- **Go**: The backend API is built using Go with the Gin framework, providing a robust environment for handling asynchronous operations.
+- **MongoDB**: A NoSQL database used to store emoji data.
+- **Kafka**: A distributed streaming platform used for building real-time data pipelines and streaming applications. It allows for the efficient handling of messages related to emoji reactions.
+- **Docker**: Containerization technology used to deploy the API and Kafka services, ensuring consistency across different environments.
+- **Docker Compose**: A tool for defining and running multi-container Docker applications, simplifying the orchestration of the API and Kafka services.
+- **PySpark**: A Python API for Apache Spark, used for large-scale data processing and analytics within the system.
+- **PubSub**: A messaging service that allows for asynchronous communication between different components of the system, facilitating the handling of emoji-related events.
+
+## How It Works
+
+1. **API**: The API serves as the main interface for users to interact with the system. It handles requests related to emoji reactions and communicates with the MongoDB database to retrieve data.
+
+2. **Kafka**: The Kafka service manages the messaging between different components of the system. It allows for the creation of topics where messages can be published and consumed. In this system, the `emoji-reaction-topic` is used to handle emoji reactions.
+
+3. **MongoDB**: The database stores the emoji data and user reactions, allowing for persistent storage and retrieval of information.
+
+4. **PySpark Application**: The `sparkApp` consumes a stream of data from Kafka and computes aggregates of the data over an interval and writes the computed data to another Kafka queue `emoji-output-topic`.
+
+5. **PubSub Application**: The PubSub app is a python consumer application that facilitates the delivery of messages to clients using a PubSub mechanism.
+
+6. **Docker**: The entire system is containerized using Docker, making it easy to deploy and manage the different services. Docker Compose is used to define the services and their configurations in a single file.
+
+## Getting Started
+
+To run the API, Kafka services, and other applications, ensure that Docker and Docker Compose are installed on your machine.
+
+
